@@ -4,7 +4,7 @@ import modern_robotics as mr
 if __name__ == "__main__":
     from dh import DHLink
 else:
-    from lib.dh import DHLink
+    from src.dh import DHLink
 
 PI_HALF = np.pi / 2
 PI = np.pi
