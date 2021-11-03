@@ -1,3 +1,4 @@
+from modern_robotics.core import JacobianSpace
 import numpy as np
 import modern_robotics as mr
 from tpk4170.visualization import Viewer
@@ -94,6 +95,7 @@ class KR6:
         self.IK = tools.IKinSpace_our(self._Slist, self._M, self.Tsb_dh, thetalist0, eomg, ev)
         self.Tsb_IK = self.IK[2][-1]
 
+        JacobianSpace
     def add_FK_to_viewer(self, viewer: Viewer):
         for i in range(len(self.Tlist)):
             viewer.add(DHFrame(self.Tlist[i]))
