@@ -3,6 +3,30 @@ from modern_robotics import FKinSpace, Adjoint, se3ToVec, MatrixLog6, TransInv, 
 import numpy as np
 
 
+def rotx(theta):
+    ct = np.cos(theta)
+    st = np.sin(theta)
+    R = np.array([[1.0, 0.0, 0.0], [0.0, ct, -st], [0.0, st, ct]])
+    return R
+
+
+def roty(theta):
+    ct = np.cos(theta)
+    st = np.sin(theta)
+    R = np.array([[ct, 0.0, st], [0.0, 1.0, 0.0], [-st, 0.0, ct]])
+    return R
+
+
+def rotz(theta):
+    ct = np.cos(theta)
+    st = np.sin(theta)
+    R = np.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
+    return R
+
+
+def vector(x,y,z):
+    return np.array([[x], [y], [z]])
+
 
 def exp6(twist, theta):
     omega = skew(twist[:3])
