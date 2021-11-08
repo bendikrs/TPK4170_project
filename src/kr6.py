@@ -95,6 +95,9 @@ class KR6:
         self.Tsb_IK = self.IK[2][-1]
 
         self.Js = mr.JacobianSpace(self._Slist, self.theta)
+    
+        self.aIK_thetaLists = tools.inverseKinematicsTheta123(self.Tsb_dh) # må endre denne til heilt frå s til b
+        self.Tsw = self.Tlist[-3]
 
     def add_FK_to_viewer(self, viewer: Viewer):
         for i in range(len(self.Tlist)):

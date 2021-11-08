@@ -147,7 +147,7 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
     r1, r2, r3, r4, a1, a2 = 0, 0.400, 0.455, 10**(-3)*np.sqrt(420**2+35**2), 0.025, 0.035
     T_SW = makeT_SW(T_SB)
     P_W = pointFromT(T_SW)
-    
+
 
     theta1_i = np.arctan2(-P_W[1], P_W[0])
     theta1_ii = np.arctan2(P_W[1], -P_W[0])
@@ -178,6 +178,5 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
     alt2 = [theta1_i, theta2_iii , theta3_ii - np.arctan(35/420)]
     alt3 = [theta1_ii, theta2_ii , theta3_i + np.arctan(35/420)]
     alt4 = [theta1_ii, theta2_iv , theta3_ii + np.arctan(35/420)]
-
 
     return np.array([alt1,alt2,alt3,alt4])
