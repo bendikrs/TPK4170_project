@@ -115,28 +115,25 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
 
     print('T_SW: \n',T_SW, '\nP_W: ', P_W)
 
-
-
     theta1_i = np.arctan2(-P_W[1], P_W[0])
     theta1_ii = np.arctan2(P_W[1], -P_W[0])
 
     Pz, Px, Py = P_W[2] - r2, \
                  P_W[0] - np.cos(theta1_i) * a1, \
                  P_W[1] + np.sin(theta1_i) * a1
-            
-
 
     c3 = (Pz**2 + Px**2 + Py**2 - r3**2 - r4**2) / (2 * r3 * r4)
 
     print(np.arccos(c3))
-
-
 
     s3_pos = np.sqrt(1-c3**2)
     s3_neg = -np.sqrt(1-c3**2)
 
     theta3_i = np.arctan2(s3_neg, c3)
     theta3_ii = np.arctan2(s3_pos, c3)
+    theta3_iii = np.arctan2(s3_neg, c3)
+    theta3_iv = np.arctan2(s3_pos, -c3)
+    
 
     print(theta3_i, theta3_ii)
 
@@ -144,16 +141,26 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
 
     c2_negs3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_neg)/(r3**2+r4**2+2*r3*r4*c3)
 
-    theta2_i = -np.arccos(c2_poss3)
-    theta2_ii = np.arccos(c2_poss3)
-    theta2_iii = -np.arccos(c2_negs3)
-    theta2_iv = np.arccos(-c2_negs3)
+    s2_pluss_s3_pos = (Pz * (r3 + r4*c3) + np.sqrt(Px**2 + Py**2) * r4*s3_pos) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
+    s2_minus_s3_pos = (Pz * (r3 + r4*c3) - np.sqrt(Px**2 + Py**2) * r4*s3_pos) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
+    s2_pluss_s3_neg = (Pz * (r3 + r4*c3) + np.sqrt(Px**2 + Py**2) * r4*s3_neg) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
+    s2_minus_s3_neg = (Pz * (r3 + r4*c3) - np.sqrt(Px**2 + Py**2) * r4*s3_neg) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
+    
+    # theta2_i   = -np.arccos( c2_poss3)
+    # theta2_ii  =  np.arccos(-c2_poss3)
+    theta2_iii = -np.arccos( c2_negs3)
+    # theta2_iv  =  np.arccos(-c2_negs3)
 
-    alt1 = np.array([theta1_i, theta2_i, theta3_i + np.arctan(35/420)])*180/np.pi
+    theta2_i   = np.arctan2(s2_minus_s3_pos,  c2_poss3) #good
+    theta2_ii  = np.arctan2(s2_minus_s3_pos, -c2_poss3) 
+    # theta2_iii = np.arctan2(s2_minus_s3_neg,  c2_poss3)
+    theta2_iv  = np.arctan2(s2_pluss_s3_pos, -c2_negs3)
+    #testliste: pluss, neg, pos - pluss, neg, neg - pluss, pos, neg - pluss, pos, pos 
+
+    alt1 = np.array([theta1_i, theta2_i, theta3_i + np.arctan(35/420)])*180/np.pi #good
     alt2 = np.array([theta1_i, theta2_iii , theta3_ii  + np.arctan(35/420)])*180/np.pi
-    alt3 = np.array([theta1_ii, theta2_ii , theta3_i ])*180/np.pi
-
-    alt4 = np.array([theta1_ii, theta2_iv , theta3_ii])*180/np.pi
+    alt3 = 180/np.pi*np.array([theta1_ii, theta2_ii , theta3_iii ])#- np.arctan(35/420)])*180/np.pi
+    alt4 = 180/np.pi*np.array([theta1_ii, theta2_iv , theta3_iv ])#- np.arctan(35/420)])*180/np.pi
 
 
     return np.array([alt1,alt2,alt3,alt4])
