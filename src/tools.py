@@ -98,9 +98,9 @@ def pointFromT(T=np.array) -> np.array:
 
 
 def makeT_SW(T_SB=np.array) -> np.array:
-    T_BW = np.array([[1, 0, 0, 0],
+    T_BW = np.array([[0, 0, 1, 0],
                      [0, 1, 0, 0],
-                     [0, 0, 1, -0.080],
+                     [1, 0, 0, -0.080],
                      [0, 0, 0, 1]])
     return np.dot(T_SB, T_BW)
 
@@ -109,38 +109,48 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
     '''Outputs four lists of thetas giving different configurations of joint 1,2 and 3 that provide the same wrist position
     return np.array(4x3)
     '''
-    r1, r2, r3, r4, a1, a2 = 0, 0.400, 0.455, np.sqrt(0.420**2+0.035**2), 0.025, 0.035
-    T_SW = makeT_SW(T_SB)
+    r2, r3, r4, a1, a2 = 0.400, 0.455, np.sqrt(0.420**2+0.035**2), 0.025, 0.035 #distansane i roboten
+    T_SW = makeT_SW(T_SB) # lager T matrise med origo i wrist beskrefe i S-frame koordinater
     P_W = pointFromT(T_SW)
 
-    print(P_W)
+    print('T_SW: \n',T_SW, '\nP_W: ', P_W)
+
+
 
     theta1_i = np.arctan2(-P_W[1], P_W[0])
     theta1_ii = np.arctan2(P_W[1], -P_W[0])
 
-    Pz, Px, Py = P_W[2]-r2, \
+    Pz, Px, Py = P_W[2] - r2, \
                  P_W[0] - np.cos(theta1_i) * a1, \
-                 P_W[1] + np.sin(theta1_ii) * a1
+                 P_W[1] + np.sin(theta1_i) * a1
+            
+
 
     c3 = (Pz**2 + Px**2 + Py**2 - r3**2 - r4**2) / (2 * r3 * r4)
-    print(c3)
-    theta3_i = np.arccos(c3)
-    theta3_ii = - theta3_i
+
+    print(np.arccos(c3))
+
+
 
     s3_pos = np.sqrt(1-c3**2)
     s3_neg = -np.sqrt(1-c3**2)
+
+    theta3_i = np.arctan2(s3_neg, c3)
+    theta3_ii = np.arctan2(s3_pos, c3)
+
+    print(theta3_i, theta3_ii)
 
     c2_poss3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_pos)/(r3**2+r4**2+2*r3*r4*c3)
 
     c2_negs3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_neg)/(r3**2+r4**2+2*r3*r4*c3)
 
     theta2_i = np.arccos(c2_poss3)
-    theta2_ii = np.arccos(-c2_poss3)
-    theta2_iii = np.arccos(c2_negs3)
+    theta2_ii = np.arccos(c2_poss3)
+    theta2_iii = -np.arccos(c2_negs3)
     theta2_iv = np.arccos(-c2_negs3)
 
     alt1 = np.array([theta1_i, theta2_i, theta3_i ])*180/np.pi
-    alt2 = np.array([theta1_i, theta2_iii , theta3_ii ])*180/np.pi
+    alt2 = np.array([theta1_i, theta2_iii , theta3_ii  + np.arctan(35/420)])*180/np.pi
     alt3 = np.array([theta1_ii, theta2_ii , theta3_i ])*180/np.pi
     alt4 = np.array([theta1_ii, theta2_iv , theta3_ii])*180/np.pi
 
