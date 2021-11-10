@@ -144,14 +144,15 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
 
     c2_negs3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_neg)/(r3**2+r4**2+2*r3*r4*c3)
 
-    theta2_i = np.arccos(c2_poss3)
+    theta2_i = -np.arccos(c2_poss3)
     theta2_ii = np.arccos(c2_poss3)
     theta2_iii = -np.arccos(c2_negs3)
     theta2_iv = np.arccos(-c2_negs3)
 
-    alt1 = np.array([theta1_i, theta2_i, theta3_i ])*180/np.pi
+    alt1 = np.array([theta1_i, theta2_i, theta3_i + np.arctan(35/420)])*180/np.pi
     alt2 = np.array([theta1_i, theta2_iii , theta3_ii  + np.arctan(35/420)])*180/np.pi
     alt3 = np.array([theta1_ii, theta2_ii , theta3_i ])*180/np.pi
+
     alt4 = np.array([theta1_ii, theta2_iv , theta3_ii])*180/np.pi
 
 
