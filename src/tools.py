@@ -113,15 +113,17 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
     T_SW = makeT_SW(T_SB)
     P_W = pointFromT(T_SW)
 
+    print(P_W)
+
     theta1_i = np.arctan2(-P_W[1], P_W[0])
     theta1_ii = np.arctan2(P_W[1], -P_W[0])
 
     Pz, Px, Py = P_W[2]-r2, \
                  P_W[0] - np.cos(theta1_i) * a1, \
-                 P_W[1]+np.sin(theta1_ii) * a1
+                 P_W[1] + np.sin(theta1_ii) * a1
 
     c3 = (Pz**2 + Px**2 + Py**2 - r3**2 - r4**2) / (2 * r3 * r4)
-
+    print(c3)
     theta3_i = np.arccos(c3)
     theta3_ii = - theta3_i
 
@@ -137,10 +139,10 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
     theta2_iii = np.arccos(c2_negs3)
     theta2_iv = np.arccos(-c2_negs3)
 
-    alt1 = [theta1_i, theta2_i, theta3_i + np.arctan(0.035/0.420)]
-    alt2 = [theta1_i, theta2_iii , theta3_ii + np.arctan(0.035/0.420)]
-    alt3 = [theta1_ii, theta2_ii , theta3_i - np.arctan(0.035/0.420)]
-    alt4 = [theta1_ii, theta2_iv , theta3_ii - np.arctan(0.035/0.420)]
+    alt1 = np.array([theta1_i, theta2_i, theta3_i ])*180/np.pi
+    alt2 = np.array([theta1_i, theta2_iii , theta3_ii ])*180/np.pi
+    alt3 = np.array([theta1_ii, theta2_ii , theta3_i ])*180/np.pi
+    alt4 = np.array([theta1_ii, theta2_iv , theta3_ii])*180/np.pi
 
 
     return np.array([alt1,alt2,alt3,alt4])
