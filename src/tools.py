@@ -100,7 +100,7 @@ def pointFromT(T=np.array) -> np.array:
 def makeT_SW(T_SB=np.array) -> np.array:
     T_BW = np.array([[0, 0, 1, 0],
                      [0, 1, 0, 0],
-                     [1, 0, 0, 0.080],
+                     [1, 0, 0, -0.080],
                      [0, 0, 0, 1]])
     return np.dot(T_SB, T_BW)
 
@@ -120,9 +120,7 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
 
     print(theta1_i)
 
-    
-
-    #unflipped
+    #forward
 
     Pz, Px, Py = P_W[2] - r2, \
                  P_W[0] - np.cos(theta1_i) * a1, \
@@ -150,7 +148,7 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
     theta2_iii = np.arctan2(-s2_minus_negs3, c2_negs3)
      
 
-    # flipped
+    # backward
 
     Pz, Px, Py = P_W[2] - r2, \
                  P_W[0] - np.cos(theta1_ii) * a1, \
@@ -158,15 +156,12 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
 
     c3 = (Pz**2 + Px**2 + Py**2 - r3**2 - r4**2) / (2 * r3 * r4)
 
-    # print(np.arccos(c3))
 
     s3_pos = np.sqrt(1-c3**2)
     s3_neg = -np.sqrt(1-c3**2)
 
     theta3_iii = -np.arctan2(s3_neg, c3)
     theta3_iv = -np.arctan2(s3_pos, c3)
-
-    # print(theta3_i*180/np.pi)
 
     c2_poss3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_pos)/(r3**2+r4**2+2*r3*r4*c3)
     c2_negs3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_neg)/(r3**2+r4**2+2*r3*r4*c3)
