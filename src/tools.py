@@ -2,6 +2,8 @@ import sympy as sp
 from modern_robotics import FKinSpace, Adjoint, se3ToVec, MatrixLog6, TransInv, JacobianSpace
 import numpy as np
 
+from src.kr6 import KR6
+
 
 def rotx(theta):
     ct = np.cos(theta)
@@ -118,8 +120,6 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
     theta1_i = np.arctan2(-P_W[1], P_W[0])
     theta1_ii = np.arctan2(P_W[1], -P_W[0])
 
-    print(theta1_i)
-
     #forward
 
     Pz, Px, Py = P_W[2] - r2, \
@@ -127,8 +127,6 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
                  P_W[1] + np.sin(theta1_i) * a1
 
     c3 = (Pz**2 + Px**2 + Py**2 - r3**2 - r4**2) / (2 * r3 * r4)
-
-    print(np.arccos(c3))
 
     s3_pos = np.sqrt(1-c3**2)
     s3_neg = -np.sqrt(1-c3**2)
@@ -139,15 +137,14 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
     c2_poss3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_pos)/(r3**2+r4**2+2*r3*r4*c3)
     c2_negs3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_neg)/(r3**2+r4**2+2*r3*r4*c3)
      
-    s2_minus_poss3 = (Pz * (r3 + r4*c3) - np.sqrt(Px**2 + Py**2) * r4*s3_pos) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
-    s2_minus_negs3 = (Pz * (r3 + r4*c3) - np.sqrt(Px**2 + Py**2) * r4*s3_neg) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
-    s2_pluss_poss3 = (Pz * (r3 + r4*c3) + np.sqrt(Px**2 + Py**2) * r4*s3_pos) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
-    s2_pluss_negs3 = (Pz * (r3 + r4*c3) + np.sqrt(Px**2 + Py**2) * r4*s3_neg) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
+    # s2_minus_poss3 = (Pz * (r3 + r4*c3) - np.sqrt(Px**2 + Py**2) * r4*s3_pos) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
+    # s2_minus_negs3 = (Pz * (r3 + r4*c3) - np.sqrt(Px**2 + Py**2) * r4*s3_neg) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
+    # s2_pluss_poss3 = (Pz * (r3 + r4*c3) + np.sqrt(Px**2 + Py**2) * r4*s3_pos) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
+    # s2_pluss_negs3 = (Pz * (r3 + r4*c3) + np.sqrt(Px**2 + Py**2) * r4*s3_neg) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
     
     theta2_i = np.arctan2(-s2_minus_poss3, c2_poss3)
     theta2_iii = np.arctan2(-s2_minus_negs3, c2_negs3)
      
-
     # backward
 
     Pz, Px, Py = P_W[2] - r2, \
@@ -155,7 +152,6 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
                  P_W[1] + np.sin(theta1_ii) * a1
 
     c3 = (Pz**2 + Px**2 + Py**2 - r3**2 - r4**2) / (2 * r3 * r4)
-
 
     s3_pos = np.sqrt(1-c3**2)
     s3_neg = -np.sqrt(1-c3**2)
@@ -181,3 +177,21 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
 
 
     return np.array([alt1,alt2,alt3,alt4])
+
+
+
+
+def inverseKinematicsTheta456(T_SB:np.array, T_S3, theta123List):
+    thetalist = np.array=([np.zeros(3),np.zeros(3)])
+    for config in theta123List:
+        T_3B = np.dot(np.linalg.inv(T_S3),T_SB)
+        theta4_i, theta4_ii = np.arctan2(T_3B[1][2], T_3B[0][2])
+        theta5_i, theta5_ii = np.arctan2(np.sqrt(T_3B[0][2]**2+T_3B[1][2]**2), T_3B[2][2])
+
+        theta6_i, theta6_ii = np.arctan2(T_3B[2][1], -T_3B[2][0])
+        theta = [[theta4_i,theta5_i, theta6_i],[theta4_ii, theta5_ii, theta6_ii]]
+        thetalist[0] = theta[0]
+        thetalist[0] = theta[0]
+    return thetalist
+
+
