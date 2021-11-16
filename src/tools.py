@@ -26,6 +26,26 @@ def rotz(theta):
     R = np.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
     return R
 
+def sprotx(theta):
+    ct = sp.cos(theta)
+    st = sp.sin(theta)
+    R = sp.Matrix([[1.0, 0.0, 0.0], [0.0, ct, -st], [0.0, st, ct]])
+    return R
+
+
+def sproty(theta):
+    ct = sp.cos(theta)
+    st = sp.sin(theta)
+    R = sp.Matrix([[ct, 0.0, st], [0.0, 1.0, 0.0], [-st, 0.0, ct]])
+    return R
+
+
+def sprotz(theta):
+    ct = sp.cos(theta)
+    st = sp.sin(theta)
+    R = sp.Matrix([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
+    return R
+
 
 def vector(x,y,z):
     return np.array([[x], [y], [z]])
@@ -180,32 +200,60 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
     return np.array([alt1,alt2,alt3,alt4])
 
 
-
-
 def inverseKinematicsTheta456(thetalists, T_SB):
+
+    th1, th2, th3 = sp.symbols('th1, th2, th3')
+
+    th4, th5, th6 = sp.symbols('th4, th5, th6')
 
     theta = thetalists[1]
 
-    R_S_1 = rotx(np.pi)
-    R_1_2 = rotx(np.pi/2) @ rotz(theta[0])
-    R_2_3 = rotz(theta[1]) 
-    R_3_4 = rotz(theta[2]) @ rotz(-np.pi/2) @ rotx(np.pi/2)
+    R_S1 = rotx(np.pi)
+    R_12 = rotx(np.pi/2) @ rotz(theta[0])
+    R_23 = rotz(theta[1]) 
+    R_34 = rotz(theta[2]) @ rotz(-np.pi/2) @ rotx(np.pi/2)
+    # R_S1 = sprotx(np.pi)
+    # R_12 = sprotx(np.pi/2) @ sprotz(th1)
+    # R_23 = sprotz(th2) 
+    # R_34 = sprotz(th3) @ sprotz(-np.pi/2) @ sprotx(np.pi/2)
 
-    R_S4 = np.around(R_S_1 @ R_1_2 @ R_2_3 @ R_3_4,3)
+    R_S4 = R_S1 @ R_12 @ R_23 @ R_34
+
+
 
     R_SB = T_SB[:3,:3]
 
-    R_4B = np.linalg.inv(R_S4) @ R_SB
+    R_4Ba = np.linalg.inv(R_S4) @ R_SB
 
-    theta4_i, theta4_ii = np.arctan2(R_4B[1][2],R_4B[0][2])
-
-    return theta4_i
-
+    
+    (theta4_i, theta4_ii) = np.arctan2(R_4Ba[1][2], R_4Ba[0][2])
 
 
-    # R = rotx(-theta[3])@roty(theta[4])@rotx(-theta[5])
-    # print(R)
-    # print(S[:,:3])
+    # R_45 = sprotz(th4) @ sprotx(-np.pi/2)
 
-    # T_SB = FKinSpace(M, S[:,:3], np.pi/180*theta)
-    # print(T_SB)
+    # R_56 = sprotz(th5) @ sprotx(np.pi/2)
+
+    # R_6B = sprotz(th6) @ sprotx(np.pi)
+
+    
+
+    # R_4Bb = R_45 @ R_56 @ R_6B
+
+    # vil at R_s4*R_46 = R_sb input rotasjonsmatrise # når vi kun ser på rotasjonsdelen av matrisa
+    # altså: R_S4*R_4Bb = R_SB
+
+    # equations = []
+
+    # for i in range(3):
+    #     for j in range(3):
+    #         equations.append(R_S4[i][j]*R_4Bb[i,j]-R_SB[i][j])
+    #         # print(R_S4[i][j])
+    #         # print(R_4Bb[i,j])
+    #         # print(R_SB[i,j])
+    # print(equations[0])
+    
+    return (theta4_i, theta4_ii)
+
+
+    # return R_4Ba, equations
+
