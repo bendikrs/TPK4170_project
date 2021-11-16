@@ -195,12 +195,12 @@ def inverseKinematicsTheta456(thetalists, T_SB):
 
     R_SB = T_SB[:3,:3]
 
-    print(R_SB, '\n', R_S4)
+    R_4B = np.linalg.inv(R_S4) @ R_SB
 
-    R_4B = np.linalg.inv(R_S4)
+    theta4_i, theta4_ii = np.arctan2(R_4B[1][2],R_4B[0][2])
 
-    
-    
+    return theta4_i
+
 
 
     # R = rotx(-theta[3])@roty(theta[4])@rotx(-theta[5])
