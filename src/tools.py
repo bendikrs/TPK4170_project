@@ -182,20 +182,25 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
 
 
 
-def inverseKinematicsTheta456(thetalists):
+def inverseKinematicsTheta456(thetalists, T_SB):
 
     theta = thetalists[1]
 
     R_S_1 = rotx(np.pi)
     R_1_2 = rotx(np.pi/2) @ rotz(theta[0])
     R_2_3 = rotz(theta[1]) 
+    R_3_4 = rotz(theta[2]) @ rotz(-np.pi/2) @ rotx(np.pi/2)
+
+    R_S4 = np.around(R_S_1 @ R_1_2 @ R_2_3 @ R_3_4,3)
+
+    R_SB = T_SB[:3,:3]
+
+    print(R_SB, '\n', R_S4)
+
+    R_4B = np.linalg.inv(R_S4)
+
     
-
-    R_S_2 = R_S_1 @ R_1_2
     
-
-
-    print(np.around(R_S_2,3))
 
 
     # R = rotx(-theta[3])@roty(theta[4])@rotx(-theta[5])
