@@ -201,59 +201,48 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
 
 
 def inverseKinematicsTheta456(thetalists, T_SB):
+    R_SB = T_SB[:3,:3] # input rotation matrix
+    totalThetaLists = []
 
-    th1, th2, th3 = sp.symbols('th1, th2, th3')
+    # Two first elements in thetalists is correct
 
-    th4, th5, th6 = sp.symbols('th4, th5, th6')
-
-    theta = thetalists[1]
-
-    R_S1 = rotx(np.pi)
-    R_12 = rotx(np.pi/2) @ rotz(theta[0])
-    R_23 = rotz(theta[1]) 
-    R_34 = rotz(theta[2]) @ rotz(-np.pi/2) @ rotx(np.pi/2)
-    # R_S1 = sprotx(np.pi)
-    # R_12 = sprotx(np.pi/2) @ sprotz(th1)
-    # R_23 = sprotz(th2) 
-    # R_34 = sprotz(th3) @ sprotz(-np.pi/2) @ sprotx(np.pi/2)
-
-    R_S4 = R_S1 @ R_12 @ R_23 @ R_34
+    for thetas in thetalists: # iterate through each of the four solutions from inverseKinematicsTheta123
+        R_S1 = rotx(np.pi) # Flip the frame around x-axis
+        R_12 = rotx(np.pi/2) @ rotz(thetas[0]) 
+        R_23 = rotz(thetas[1]) 
+        R_34 = rotz(thetas[2]) @ rotz(-np.pi/2) @ rotx(np.pi/2)
+        R_S4 = R_S1 @ R_12 @ R_23 @ R_34 # Rotation matrix from Space frame to 4th frame
 
 
-
-    R_SB = T_SB[:3,:3]
-
-    R_4Ba = np.linalg.inv(R_S4) @ R_SB
-
+        R_4B = np.linalg.inv(R_S4) @ R_SB # same as R36 from 2.12.5 from siciliano
     
-    (theta4_i, theta4_ii) = np.arctan2(R_4Ba[1][2], R_4Ba[0][2])
+        nx = R_4B[0][0]
+        ny = R_4B[1][0]
+        nz = R_4B[2][0]
+        sx = R_4B[0][1]
+        sy = R_4B[1][1]
+        sz = R_4B[2][1]
+        ax = R_4B[0][2]
+        ay = R_4B[1][2]
+        az = R_4B[2][2]
 
 
-    # R_45 = sprotz(th4) @ sprotx(-np.pi/2)
+        theta4 = np.arctan2(ay,ax)
+        theta5 = np.arctan2(np.sqrt(ax**2 + ay**2), az)
+        theta6 = np.arctan2(sz,-nz)
 
-    # R_56 = sprotz(th5) @ sprotx(np.pi/2)
-
-    # R_6B = sprotz(th6) @ sprotx(np.pi)
-
-    
-
-    # R_4Bb = R_45 @ R_56 @ R_6B
-
-    # vil at R_s4*R_46 = R_sb input rotasjonsmatrise # når vi kun ser på rotasjonsdelen av matrisa
-    # altså: R_S4*R_4Bb = R_SB
-
-    # equations = []
-
-    # for i in range(3):
-    #     for j in range(3):
-    #         equations.append(R_S4[i][j]*R_4Bb[i,j]-R_SB[i][j])
-    #         # print(R_S4[i][j])
-    #         # print(R_4Bb[i,j])
-    #         # print(R_SB[i,j])
-    # print(equations[0])
-    
-    return (theta4_i, theta4_ii)
+        if theta5 < 0 or theta5 > np.pi:
+            theta4    = np.arctan2(-ay, -ax)
+            theta5    = np.arctan2(-np.sqrt(ax**2 + ay**2), az)
+            theta6    = np.arctan2(-sz, nz)
+        
 
 
-    # return R_4Ba, equations
+        tempThetas = np.array([thetas[0], thetas[1], thetas[2], theta4, theta5, theta6])
+        totalThetaLists.append(tempThetas)
 
+
+
+        
+
+    return totalThetaLists
