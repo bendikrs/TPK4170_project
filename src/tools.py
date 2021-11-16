@@ -241,8 +241,4 @@ def inverseKinematicsTheta456(thetalists, T_SB):
         tempThetas = np.array([thetas[0], thetas[1], thetas[2], theta4, theta5, theta6])
         totalThetaLists.append(tempThetas)
 
-
-
-        
-
     return totalThetaLists
