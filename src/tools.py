@@ -1,5 +1,8 @@
+from modern_robotics.core import MatrixExp6, VecTose3
 import sympy as sp
+
 from modern_robotics import FKinSpace, Adjoint, se3ToVec, MatrixLog6, TransInv, JacobianSpace, MatrixExp6, VecTose3
+
 import numpy as np
 
 
@@ -201,7 +204,13 @@ def inverseKinematicsTheta456(thetalists, T_SB, S, M):
 
     th4, th5, th6 = sp.symbols('th4, th5, th6')
 
-    theta = thetalists[1]
+    T3 = exp6(-S[:,2],theta[2])
+    T2 = exp6(-S[:,1],theta[1])
+    T1 = exp6(-S[:,0],theta[0])
+    T36 = T3@T2@T1@T_SB@np.linalg.inv(M)
+    # T36 = MatrixExp6(VecTose3(-np.array(S)[:,2] * theta[2])) @ MatrixExp6(VecTose3(-np.array(S)[:,1] * theta[1])) @ MatrixExp6(VecTose3(-np.array(S)[:,0] * theta[0])) @ T_SB @ np.linalg.inv(M)
+    R_36 = np.array(T36)[:3][:3].astype(np.float64)
+
 
     T_46 = exp6(-S[:,2], theta[2]) @ exp6(-S[:,1], theta[1]) @ exp6(-S[:,0], theta[0]) @ T_SB @ np.linalg.inv(M)
 
@@ -211,6 +220,8 @@ def inverseKinematicsTheta456(thetalists, T_SB, S, M):
 
     return R_46, R_46sp
 
+
+    return np.concatenate((theta,theta456))
 
 
 
