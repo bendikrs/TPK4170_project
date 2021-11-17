@@ -96,7 +96,7 @@ class KR6:
 
         self.Js = mr.JacobianSpace(self._Slist, self.theta)
     
-        self.aIK_thetaLists = tools.inverseKinematicsTheta123(self.Tsb_dh) # må endre denne til heilt frå s til b
+        self.aIK_thetaLists = tools.inverseKinematicsTheta123(self.Tsb_poe) # må endre denne til heilt frå s til b
         #self.Tsw = self.Tlist[-3]
         self.Tsw = tools.makeT_SW(self.Tsb_poe)
 
