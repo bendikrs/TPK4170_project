@@ -45,12 +45,12 @@ class KR6:
                 [-1,0, 0,                  0,-(self.a2+self.d1),                       0]
             ]).T
         
-        # self._Slist2 = np.array([[0, 0, 0, 1, 0, 1],
-        #                          [0, 1, 1, 0, 1, 0],
-        #                          [1, 0, 0, 0, 0, 0],
-        #                          [0,-self.d1,-self.d2, 0, 0, 0],
-        #                          [0, 0, 0, -self.a2, 0, 0],
-        #                          [0, self.a1, 0, 0, -self.d3, 0]])
+        # self._Slist2 = np.array([[0,       0,       0,        1,        0, 1],
+        #                          [0,       1,       1,        0,        1, 0],
+        #                          [1,       0,       0,        0,        0, 0],
+        #                          [0,-self.d1,-self.d2,        0,        0, 0],
+        #                          [0,       0,       0, -self.a2,        0, 0],
+        #                          [0, self.a1,       0,        0, -self.d3, 0]])
 
         # Transposing the theta list to a column vector
         self.theta = np.atleast_2d(theta).T
