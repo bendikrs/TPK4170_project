@@ -201,15 +201,28 @@ def inverseKinematicsTheta456(thetalists, T_SB, S, M):
 
     th4, th5, th6 = sp.symbols('th4, th5, th6')
 
-    theta = thetalists[1]
+    theta = np.zeros(shape=(4,3))
 
-    T_46 = exp6(-S[:,2], theta[2]) @ exp6(-S[:,1], theta[1]) @ exp6(-S[:,0], theta[0]) @ T_SB @ np.linalg.inv(M)
+    for i in thetalists:
 
-    R_46 = T_46[:3,:3]
+        T_46 = exp6(-S[:,2], i[2]) @ exp6(-S[:,1], i[1]) @ exp6(-S[:,0], i[0]) @ T_SB @ np.linalg.inv(M)
+
+        R_46 = T_46[:3,:3]
+
+        theta4_i = np.arctan2( float(R_46[0,1]) , float(R_46[0,2]))-np.pi/2
+
+        theta5_i = np.arctan2(np.sqrt(float(R_46[0,1])**2 + float(R_46[0,2])),float(R_46[2,1]))-np.pi/2
+
+        theta6_i = np.arctan2(-float(R_46[2,1]) , float(R_46[2,0]))
+
+        thetalist = np.concatenate((i , np.array([theta4_i, theta5_i, theta6_i])))
+
+        print(np.around(thetalist*180/np.pi,1))
+
 
     R_46sp = sprotz(th4) @ sproty(th5) @ sprotz(th6)
 
-    return R_46, R_46sp
+
 
 
 
