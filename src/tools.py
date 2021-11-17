@@ -132,38 +132,38 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
     '''Outputs four lists of thetas giving different configurations of joint 1,2 and 3 that provide the same wrist position
     return np.array(4x3)
     '''
-    r2, r3, r4, a1, a2 = 0.400, 0.455, np.sqrt(0.420**2+0.035**2), 0.025, 0.035 #distansane i roboten
-    T_SW = makeT_SW(T_SB) # lager T matrise med origo i wrist beskrefe i S-frame koordinater
-    P_W = pointFromT(T_SW)
+    r2, r3, r4, a1, a2 = 0.400, 0.455, np.sqrt(0.420**2+0.035**2), 0.025, 0.035 # the distances of the robot
+    T_SW = makeT_SW(T_SB) #creates the T-matrix from space to wrist
+    P_W = pointFromT(T_SW) #extracts the origin point of the wrist frame in space coordinates
 
-    # print('T_SW: \n',T_SW, '\nP_W: ', P_W)
+
 
     theta1_i = np.arctan2(-P_W[1], P_W[0])
     theta1_ii = np.arctan2(P_W[1], -P_W[0])
 
     #forward
 
-    Pz, Px, Py = P_W[2] - r2, \
-                 P_W[0] - np.cos(theta1_i) * a1, \
-                 P_W[1] + np.sin(theta1_i) * a1
+    Px, Py, Pz = P_W[0] - np.cos(theta1_i) * a1, \
+                 P_W[1] + np.sin(theta1_i) * a1, \
+                 P_W[2] - r2,
 
-    c3 = (Pz**2 + Px**2 + Py**2 - r3**2 - r4**2) / (2 * r3 * r4)
+    c3 = (Px**2 + Py**2 + Pz**2 - r3**2 - r4**2) / (2 * r3 * r4)
 
     s3_pos = np.sqrt(1-c3**2)
     s3_neg = -np.sqrt(1-c3**2)
 
-    theta3_i = np.arctan2(s3_neg, c3)
-    theta3_ii = np.arctan2(s3_pos, c3)
+    theta3_i = np.arctan2(s3_neg, c3) #under elbow
+    theta3_ii = np.arctan2(s3_pos, c3) #over elbow
 
-    c2_poss3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_pos)/(r3**2+r4**2+2*r3*r4*c3)
-    c2_negs3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_neg)/(r3**2+r4**2+2*r3*r4*c3)
+    c2_poss3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_pos) / (r3**2+r4**2+2*r3*r4*c3)
+    c2_negs3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_neg) / (r3**2+r4**2+2*r3*r4*c3)
      
     s2_minus_poss3 = (Pz * (r3 + r4*c3) - np.sqrt(Px**2 + Py**2) * r4*s3_pos) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
     s2_minus_negs3 = (Pz * (r3 + r4*c3) - np.sqrt(Px**2 + Py**2) * r4*s3_neg) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
     s2_pluss_poss3 = (Pz * (r3 + r4*c3) + np.sqrt(Px**2 + Py**2) * r4*s3_pos) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
     s2_pluss_negs3 = (Pz * (r3 + r4*c3) + np.sqrt(Px**2 + Py**2) * r4*s3_neg) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
     
-    theta2_i = np.arctan2(-s2_minus_poss3, c2_poss3)
+    theta2_i   = np.arctan2(-s2_minus_poss3, c2_poss3)
     theta2_iii = np.arctan2(-s2_minus_negs3, c2_negs3)
      
     # backward
@@ -183,11 +183,6 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
     c2_poss3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_pos)/(r3**2+r4**2+2*r3*r4*c3)
     c2_negs3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_neg)/(r3**2+r4**2+2*r3*r4*c3)
      
-    # s2_minus_poss3 = (Pz * (r3 + r4*c3) - np.sqrt(Px**2 + Py**2) * r4*s3_pos) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
-    # s2_minus_negs3 = (Pz * (r3 + r4*c3) - np.sqrt(Px**2 + Py**2) * r4*s3_neg) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
-    # s2_pluss_poss3 = (Pz * (r3 + r4*c3) + np.sqrt(Px**2 + Py**2) * r4*s3_pos) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
-    # s2_pluss_negs3 = (Pz * (r3 + r4*c3) + np.sqrt(Px**2 + Py**2) * r4*s3_neg) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
-    
     theta2_ii = np.arctan2(-s2_pluss_negs3, -c2_poss3)
     theta2_iv = np.arctan2(-s2_pluss_poss3, -c2_negs3)
 
@@ -208,40 +203,14 @@ def inverseKinematicsTheta456(thetalists, T_SB, S, M):
 
     theta = thetalists[1]
 
-    # R_S1 = rotx(np.pi)
-    # R_12 = rotx(np.pi/2) @ rotz(theta[0])
-    # R_23 = rotz(theta[1]) 
-    # R_34 = rotz(theta[2]) @ rotz(-np.pi/2) @ rotx(np.pi/2)
-
-
-    # T_46 = MatrixExp6(VecTose3(-S[:,2]*theta[2])) @ MatrixExp6(VecTose3(-S[:,1]*theta[1])) @ MatrixExp6(VecTose3(-S[:,0]*theta[0])) @ T_SB @ np.linalg.inv(M)
-
     T_46 = exp6(-S[:,2], theta[2]) @ exp6(-S[:,1], theta[1]) @ exp6(-S[:,0], theta[0]) @ T_SB @ np.linalg.inv(M)
-
-    T_46 = T_46
 
     R_46 = T_46[:3,:3]
 
-    # R_46 = rotz(theta[0]) @ rotx(theta[1]) @ rotz(theta[2])
-
     R_46sp = sprotz(th4) @ sproty(th5) @ sprotz(th6)
-
-    c_{\theta_4}c_{\theta_5}c_{\theta_6} - s_{\theta_4}s_{\theta_6} & -c_{\theta_4}c_{\theta_5}s_{\theta_6} - s_{\theta_4}c_{\theta_6} & c_{\theta_4}s_{\theta_5} \\
-    s_{\theta_4}c_{\theta_5}c_{\theta_6}+c_{\theta_4}s_{\theta_6} & -s_{\theta_4}c_{\theta_5}s_{\theta_6}+c_{\theta_4}c_{\theta_6} & s_{\theta_4}s_{\theta_5} \\
-    -s_{\theta_5}c_{\theta_6} & s_{\theta_5}s_{\theta_6} & c_{\theta_5}
-
-
-
-    # print(R_46)
-
-    # R_SB = T_SB[:3,:3]
-
-    # # R_4B = np.linalg.inv(R_S4) @ R_SB
-
 
     return R_46, R_46sp
 
-    # return  exp6(S[:,0], theta[0]) @ exp6(S[:,1], theta[1]) @ exp6(S[:,2], theta[2]) @ T_46
 
 
 
