@@ -1,5 +1,5 @@
 import sympy as sp
-from modern_robotics import FKinSpace, Adjoint, se3ToVec, MatrixLog6, TransInv, JacobianSpace
+from modern_robotics import FKinSpace, Adjoint, se3ToVec, MatrixLog6, TransInv, JacobianSpace, MatrixExp6, VecTose3
 import numpy as np
 
 
@@ -200,7 +200,7 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
     return np.array([alt1,alt2,alt3,alt4])
 
 
-def inverseKinematicsTheta456(thetalists, T_SB):
+def inverseKinematicsTheta456(thetalists, T_SB, S, M):
 
     th1, th2, th3 = sp.symbols('th1, th2, th3')
 
@@ -208,52 +208,40 @@ def inverseKinematicsTheta456(thetalists, T_SB):
 
     theta = thetalists[1]
 
-    R_S1 = rotx(np.pi)
-    R_12 = rotx(np.pi/2) @ rotz(theta[0])
-    R_23 = rotz(theta[1]) 
-    R_34 = rotz(theta[2]) @ rotz(-np.pi/2) @ rotx(np.pi/2)
-    # R_S1 = sprotx(np.pi)
-    # R_12 = sprotx(np.pi/2) @ sprotz(th1)
-    # R_23 = sprotz(th2) 
-    # R_34 = sprotz(th3) @ sprotz(-np.pi/2) @ sprotx(np.pi/2)
-
-    R_S4 = R_S1 @ R_12 @ R_23 @ R_34
+    # R_S1 = rotx(np.pi)
+    # R_12 = rotx(np.pi/2) @ rotz(theta[0])
+    # R_23 = rotz(theta[1]) 
+    # R_34 = rotz(theta[2]) @ rotz(-np.pi/2) @ rotx(np.pi/2)
 
 
+    # T_46 = MatrixExp6(VecTose3(-S[:,2]*theta[2])) @ MatrixExp6(VecTose3(-S[:,1]*theta[1])) @ MatrixExp6(VecTose3(-S[:,0]*theta[0])) @ T_SB @ np.linalg.inv(M)
 
-    R_SB = T_SB[:3,:3]
+    T_46 = exp6(-S[:,2], theta[2]) @ exp6(-S[:,1], theta[1]) @ exp6(-S[:,0], theta[0]) @ T_SB @ np.linalg.inv(M)
 
-    R_4Ba = np.linalg.inv(R_S4) @ R_SB
+    T_46 = T_46
 
-    
-    (theta4_i, theta4_ii) = np.arctan2(R_4Ba[1][2], R_4Ba[0][2])
+    R_46 = T_46[:3,:3]
 
+    # R_46 = rotz(theta[0]) @ rotx(theta[1]) @ rotz(theta[2])
 
-    # R_45 = sprotz(th4) @ sprotx(-np.pi/2)
+    R_46sp = sprotz(th4) @ sproty(th5) @ sprotz(th6)
 
-    # R_56 = sprotz(th5) @ sprotx(np.pi/2)
-
-    # R_6B = sprotz(th6) @ sprotx(np.pi)
-
-    
-
-    # R_4Bb = R_45 @ R_56 @ R_6B
-
-    # vil at R_s4*R_46 = R_sb input rotasjonsmatrise # når vi kun ser på rotasjonsdelen av matrisa
-    # altså: R_S4*R_4Bb = R_SB
-
-    # equations = []
-
-    # for i in range(3):
-    #     for j in range(3):
-    #         equations.append(R_S4[i][j]*R_4Bb[i,j]-R_SB[i][j])
-    #         # print(R_S4[i][j])
-    #         # print(R_4Bb[i,j])
-    #         # print(R_SB[i,j])
-    # print(equations[0])
-    
-    return (theta4_i, theta4_ii)
+    c_{\theta_4}c_{\theta_5}c_{\theta_6} - s_{\theta_4}s_{\theta_6} & -c_{\theta_4}c_{\theta_5}s_{\theta_6} - s_{\theta_4}c_{\theta_6} & c_{\theta_4}s_{\theta_5} \\
+    s_{\theta_4}c_{\theta_5}c_{\theta_6}+c_{\theta_4}s_{\theta_6} & -s_{\theta_4}c_{\theta_5}s_{\theta_6}+c_{\theta_4}c_{\theta_6} & s_{\theta_4}s_{\theta_5} \\
+    -s_{\theta_5}c_{\theta_6} & s_{\theta_5}s_{\theta_6} & c_{\theta_5}
 
 
-    # return R_4Ba, equations
+
+    # print(R_46)
+
+    # R_SB = T_SB[:3,:3]
+
+    # # R_4B = np.linalg.inv(R_S4) @ R_SB
+
+
+    return R_46, R_46sp
+
+    # return  exp6(S[:,0], theta[0]) @ exp6(S[:,1], theta[1]) @ exp6(S[:,2], theta[2]) @ T_46
+
+
 
