@@ -1,4 +1,6 @@
+from modern_robotics.core import MatrixExp6, VecTose3
 import sympy as sp
+import modern_robotics as mr
 from modern_robotics import FKinSpace, Adjoint, se3ToVec, MatrixLog6, TransInv, JacobianSpace
 import numpy as np
 
@@ -182,25 +184,32 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
 
 
 
-def inverseKinematicsTheta456(thetalists, T_SB):
+def inverseKinematicsTheta456(theta, T_SB, S, M):
 
-    theta = thetalists[1]
+    T3 = exp6(-S[:,2],theta[2])
+    T2 = exp6(-S[:,1],theta[1])
+    T1 = exp6(-S[:,0],theta[0])
+    T36 = T3@T2@T1@T_SB@np.linalg.inv(M)
+    # T36 = MatrixExp6(VecTose3(-np.array(S)[:,2] * theta[2])) @ MatrixExp6(VecTose3(-np.array(S)[:,1] * theta[1])) @ MatrixExp6(VecTose3(-np.array(S)[:,0] * theta[0])) @ T_SB @ np.linalg.inv(M)
+    R_36 = np.array(T36)[:3][:3].astype(np.float64)
 
-    R_S_1 = rotx(np.pi)
-    R_1_2 = rotx(np.pi/2) @ rotz(theta[0])
-    R_2_3 = rotz(theta[1]) 
-    R_3_4 = rotz(theta[2]) @ rotz(-np.pi/2) @ rotx(np.pi/2)
+    a3x = R_36[0][2]
+    a3y = R_36[1][2]
+    a3z = R_36[2][2]
+    s3z = R_36[2][1]
+    n3z = R_36[2][0]
 
-    R_S4 = np.around(R_S_1 @ R_1_2 @ R_2_3 @ R_3_4,3)
+    th4 = np.arctan2(a3y,a3x)
+    th5 = np.arctan2(np.sqrt(a3x**2+(a3y)**2),a3z)
+    th6 = np.arctan2(s3z,-n3z)
 
-    R_SB = T_SB[:3,:3]
+    if th5<0:
+        th4 = np.arctan2(-a3y,-a3x) 
+        th5 = np.arctan2(-np.sqrt(a3x**2+(a3y)**2),a3z)
+        th6 = np.arctan2(-s3z,n3z)
+    theta456 = np.array([th4,th5,th6])
 
-    R_4B = np.linalg.inv(R_S4) @ R_SB
-
-    theta4_i, theta4_ii = np.arctan2(R_4B[1][2],R_4B[0][2])
-
-    return theta4_i
-
+    return np.concatenate((theta,theta456))
 
 
     # R = rotx(-theta[3])@roty(theta[4])@rotx(-theta[5])
