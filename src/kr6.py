@@ -113,7 +113,7 @@ class KR6:
         self.Tsb_poe = mr.FKinSpace(self._M, self._Slist, self.theta)
 
         # Numerical Inverse Kinematics
-        self.IK = tools.IKinSpace_our(self._Slist, self._M, self.Tsb_dh, thetalist0, eomg, ev)
+        self.IK = tools.IKinSpace_our(self._Slist, self._M, self.Tsb_poe, thetalist0, eomg, ev)
         self.Tsb_IK = self.IK[2][-1] # Tsb using the numerical IK
 
         # Calculating the Space Jacobian
