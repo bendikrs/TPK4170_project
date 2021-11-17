@@ -195,11 +195,18 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
     return np.array([alt1,alt2,alt3,alt4])
 
 
+
 def inverseKinematicsTheta456(thetalists, T_SB, S, M):
 
-    th1, th2, th3 = sp.symbols('th1, th2, th3')
 
-    th4, th5, th6 = sp.symbols('th4, th5, th6')
+    # Two first elements in thetalists is correct
+
+    for thetas in thetalists: # iterate through each of the four solutions from inverseKinematicsTheta123
+        R_S1 = rotx(np.pi) # Flip the frame around x-axis
+        R_12 = rotx(np.pi/2) @ rotz(thetas[0]) 
+        R_23 = rotz(thetas[1]) 
+        R_34 = rotz(thetas[2]) @ rotz(-np.pi/2) @ rotx(np.pi/2)
+        R_S4 = R_S1 @ R_12 @ R_23 @ R_34 # Rotation matrix from Space frame to 4th frame
 
     theta = np.zeros(shape=(4,3))
 
@@ -223,7 +230,4 @@ def inverseKinematicsTheta456(thetalists, T_SB, S, M):
     R_46sp = sprotz(th4) @ sproty(th5) @ sprotz(th6)
 
 
-
-
-
-
+    return totalThetaLists
