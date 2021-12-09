@@ -3,55 +3,52 @@ from modern_robotics import FKinSpace, Adjoint, se3ToVec, MatrixLog6, TransInv, 
 import numpy as np
 
 
-# from src.kr6 import KR6
-
-
-def rotx(theta):
+def rotx(theta): # Rotation about x-axis
     ct = np.cos(theta)
     st = np.sin(theta)
     R = np.array([[1.0, 0.0, 0.0], [0.0, ct, -st], [0.0, st, ct]])
     return R
 
 
-def roty(theta):
+def roty(theta): # Rotation about y-axis
     ct = np.cos(theta)
     st = np.sin(theta)
     R = np.array([[ct, 0.0, st], [0.0, 1.0, 0.0], [-st, 0.0, ct]])
     return R
 
 
-def rotz(theta):
+def rotz(theta): # Rotation about z-axis
     ct = np.cos(theta)
     st = np.sin(theta)
     R = np.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
     return R
 
-def sprotx(theta):
+def sprotx(theta): # Sympy version of rotx
     ct = sp.cos(theta)
     st = sp.sin(theta)
     R = sp.Matrix([[1.0, 0.0, 0.0], [0.0, ct, -st], [0.0, st, ct]])
     return R
 
 
-def sproty(theta):
+def sproty(theta): # Sympy version of roty
     ct = sp.cos(theta)
     st = sp.sin(theta)
     R = sp.Matrix([[ct, 0.0, st], [0.0, 1.0, 0.0], [-st, 0.0, ct]])
     return R
 
 
-def sprotz(theta):
+def sprotz(theta): # Sympy version of rotz
     ct = sp.cos(theta)
     st = sp.sin(theta)
     R = sp.Matrix([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
     return R
 
 
-def vector(x,y,z):
+def vector(x,y,z): # Vector from x, y, z position
     return np.array([[x], [y], [z]])
 
 
-def exp6(twist, theta):
+def exp6(twist, theta): 
     omega = skew(twist[:3])
     v = sp.Matrix(twist[3:])
     T = sp.eye(4)
@@ -74,6 +71,10 @@ def exp3(omega, theta):
 
 
 def Ad(T):
+    '''calculate the Adjoint matrix of a transformation matrix
+    input: T: transformation matrix
+    output: Ad: Adjoint matrix
+    '''
     AdT = sp.zeros(6)
     R = sp.Matrix(T[:3, :3])
     AdT[:3, :3] = R
@@ -113,6 +114,8 @@ def IKinSpace_our(Slist, M, T, thetalist0, eomg, ev):
 
 
 def pointFromT(T=np.array) -> np.array:
+    '''Function to extract the position from a T matrix.
+    '''
     P = np.zeros(3)
     for i in range(len(T)):
         P[i:] = T[i][3]
@@ -121,6 +124,10 @@ def pointFromT(T=np.array) -> np.array:
 
 
 def makeT_SW(T_SB=np.array) -> np.array:
+    '''Function to extract the transformation matrix to the wrist position from the T_sb matrix.
+    input: T_SB: transformation matrix from space frame to end-effector frame
+    output: T_SW: transformation matrix from space frame to the wrist position
+    '''
     T_BW = np.array([[0, 0, 1, 0],
                      [0, 1, 0, 0],
                      [1, 0, 0, -0.080],
@@ -131,6 +138,8 @@ def makeT_SW(T_SB=np.array) -> np.array:
 def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 4 alternative konfig for theta 1,2 og 3
     '''Outputs four lists of thetas giving different configurations of joint 1,2 and 3 that provide the same wrist position
     return np.array(4x3)
+    input: T_SB: transformation matrix from space frame to end-effector frame
+    output: np.array(3x4) four configurations of theta 1,2 and 3
     '''
     r2, r3, r4, a1, a2 = 0.400, 0.455, np.sqrt(0.420**2+0.035**2), 0.025, 0.035 # the distances of the robot
     T_SW = makeT_SW(T_SB) #creates the T-matrix from space to wrist
@@ -197,37 +206,32 @@ def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 
 
 
 def inverseKinematicsTheta456(thetalists, T_SB, S, M):
+    '''
+    Inputs:
+        thetalists: a list of thetas for each joint
+        T_SB: a 4x4 transformation matrix from the base to the end effector
+        S: a 6x6 matrix of the space fixed screw axis
+        M: a 4x4 matrix of robot in its home position
+    Outputs:
+        thetalists: a list of thetas 1, 2, and 3
+    '''
+    theta = [] #initialize theta return list
 
-
-    # Two first elements in thetalists is correct
-
-    for thetas in thetalists: # iterate through each of the four solutions from inverseKinematicsTheta123
-        R_S1 = rotx(np.pi) # Flip the frame around x-axis
-        R_12 = rotx(np.pi/2) @ rotz(thetas[0]) 
-        R_23 = rotz(thetas[1]) 
-        R_34 = rotz(thetas[2]) @ rotz(-np.pi/2) @ rotx(np.pi/2)
-        R_S4 = R_S1 @ R_12 @ R_23 @ R_34 # Rotation matrix from Space frame to 4th frame
-
-    theta = np.zeros(shape=(4,3))
-
-    for i in thetalists:
-
+    for i in thetalists: # for each theta in the list
+        # calculate Transformation matrix from 4 to 6 frame
         T_46 = exp6(-S[:,2], i[2]) @ exp6(-S[:,1], i[1]) @ exp6(-S[:,0], i[0]) @ T_SB @ np.linalg.inv(M)
+        R_46 = T_46[:3,:3] # extract rotation matrix
 
-        R_46 = T_46[:3,:3]
-
+        # calculating theta 4, 5, and 6
         theta4_i = np.arctan2( float(R_46[0,1]) , float(R_46[0,2]))-np.pi/2
-
         theta5_i = np.arctan2(np.sqrt(float(R_46[0,1])**2 + float(R_46[0,2])),float(R_46[2,1]))-np.pi/2
-
         theta6_i = np.arctan2(-float(R_46[2,1]) , float(R_46[2,0]))
 
+        # merging input solution with theta 4, 5, and 6
         thetalist = np.concatenate((i , np.array([theta4_i, theta5_i, theta6_i])))
+        thetalist = np.around(thetalist*180/np.pi,2)
+        theta.append(thetalist)
 
-        print(np.around(thetalist*180/np.pi,1))
+    # R_46sp = sprotz(th4) @ sproty(th5) @ sprotz(th6) # testing
 
-
-    R_46sp = sprotz(th4) @ sproty(th5) @ sprotz(th6)
-
-
-    return totalThetaLists
+    return np.array(theta)
