@@ -122,116 +122,101 @@ def pointFromT(T=np.array) -> np.array:
     return P
 
 
+def analyticalInverseKinematics(T_SB):
+    # Constants (chose to remake both M and Slist to simplify testing)
+    r1,r2,r3,r4,a1,a2 = 0.4, 0.455, 0.420, 0.08, 0.025, 0.035
+    r3_o = np.sqrt(r3**2 + a2**2) # the distance between joint 3 and the wrist
+    Slist = np.array([[0,0,-1,0,0,0],
+                    [0,1,0,-r1,0,a1],
+                    [0,1,0,-r1,0,(r2+a1)],
+                    [-1,0,0,0,-(r1+a2),0],
+                    [0,1,0,-(r1+a2),0,(r2+r3+a1)],
+                    [-1,0,0,0,-(r1+a2),0]]).T
 
-def makeT_SW(T_SB=np.array) -> np.array:
-    '''Function to extract the transformation matrix to the wrist position from the T_sb matrix.
-    input: T_SB: transformation matrix from space frame to end-effector frame
-    output: T_SW: transformation matrix from space frame to the wrist position
-    '''
-    T_BW = np.array([[0, 0, 1, 0],
-                     [0, 1, 0, 0],
-                     [1, 0, 0, -0.080],
-                     [0, 0, 0, 1]])
-    return np.dot(T_SB, T_BW)
-
-
-def inverseKinematicsTheta123(T_SB:np.array) -> np.array: #returnerer liste med 4 alternative konfig for theta 1,2 og 3
-    '''Outputs four lists of thetas giving different configurations of joint 1,2 and 3 that provide the same wrist position
-    return np.array(4x3)
-    input: T_SB: transformation matrix from space frame to end-effector frame
-    output: np.array(3x4) four configurations of theta 1,2 and 3
-    '''
-    r2, r3, r4, a1, a2 = 0.400, 0.455, np.sqrt(0.420**2+0.035**2), 0.025, 0.035 # the distances of the robot
-    T_SW = makeT_SW(T_SB) #creates the T-matrix from space to wrist
-    P_W = pointFromT(T_SW) #extracts the origin point of the wrist frame in space coordinates
-
-
-
-    theta1_i = np.arctan2(-P_W[1], P_W[0])
-    theta1_ii = np.arctan2(P_W[1], -P_W[0])
-
-    #forward
-
-    Px, Py, Pz = P_W[0] - np.cos(theta1_i) * a1, \
-                 P_W[1] + np.sin(theta1_i) * a1, \
-                 P_W[2] - r2,
-
-    c3 = (Px**2 + Py**2 + Pz**2 - r3**2 - r4**2) / (2 * r3 * r4)
-
-    s3_pos = np.sqrt(1-c3**2)
-    s3_neg = -np.sqrt(1-c3**2)
-
-    theta3_i = np.arctan2(s3_neg, c3) #under elbow
-    theta3_ii = np.arctan2(s3_pos, c3) #over elbow
-
-    c2_poss3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_pos) / (r3**2+r4**2+2*r3*r4*c3)
-    c2_negs3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_neg) / (r3**2+r4**2+2*r3*r4*c3)
-     
-    s2_minus_poss3 = (Pz * (r3 + r4*c3) - np.sqrt(Px**2 + Py**2) * r4*s3_pos) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
-    s2_minus_negs3 = (Pz * (r3 + r4*c3) - np.sqrt(Px**2 + Py**2) * r4*s3_neg) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
-    s2_pluss_poss3 = (Pz * (r3 + r4*c3) + np.sqrt(Px**2 + Py**2) * r4*s3_pos) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
-    s2_pluss_negs3 = (Pz * (r3 + r4*c3) + np.sqrt(Px**2 + Py**2) * r4*s3_neg) / (r3**2 + r4**2 + 2 * r3 * r4 * c3)
+    M = np.array([[0,0,1,r2+r3+r4+a1],
+                [0,1,0,0],
+                [-1,0,0,r1+a2],
+                [0,0,0,1]])
     
-    theta2_i   = np.arctan2(-s2_minus_poss3, c2_poss3)
-    theta2_iii = np.arctan2(-s2_minus_negs3, c2_negs3)
-     
-    # backward
+    # Translate -80mm along z-axis of endframe
+    T_BW = np.array([[1,0,0,0],
+                    [0,1,0,0],
+                    [0,0,1,-0.08],
+                    [0,0,0,1]])
 
-    Pz, Px, Py = P_W[2] - r2, \
-                 P_W[0] - np.cos(theta1_ii) * a1, \
-                 P_W[1] + np.sin(theta1_ii) * a1
+    T_SW = np.dot(T_SB,T_BW)
+    pw = np.array([T_SW[0][3],T_SW[1][3],T_SW[2][3]])
+    theta11 = -np.arctan2(pw[1],pw[0])
+    theta12 = -np.arctan2(-pw[1],-pw[0])
 
-    c3 = (Pz**2 + Px**2 + Py**2 - r3**2 - r4**2) / (2 * r3 * r4)
+    # Forward configurations using theta11
+    Px, Py, Pz =pw[0] - np.cos(theta11) * a1, \
+                pw[1] + np.sin(theta11) * a1, \
+                pw[2] - r1
 
-    s3_pos = np.sqrt(1-c3**2)
-    s3_neg = -np.sqrt(1-c3**2)
+    c3 = (Px**2 + Py**2 + Pz**2 - r2**2 - r3_o**2) / (2 * r2 * r3_o)
 
-    theta3_iii = -np.arctan2(s3_neg, c3)
-    theta3_iv = -np.arctan2(s3_pos, c3)
+    s3p = np.sqrt(1-c3**2)
+    s3n = -s3p
 
-    c2_poss3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_pos)/(r3**2+r4**2+2*r3*r4*c3)
-    c2_negs3 = (np.sqrt(Px**2 + Py**2) * (r3+r4*c3) + Pz * r4 * s3_neg)/(r3**2+r4**2+2*r3*r4*c3)
-     
-    theta2_ii = np.arctan2(-s2_pluss_negs3, -c2_poss3)
-    theta2_iv = np.arctan2(-s2_pluss_poss3, -c2_negs3)
+    theta31 = np.arctan2(s3p,c3) + np.arctan2(a2,r3)
+    theta32 = np.arctan2(s3n,c3) + np.arctan2(a2,r3)
 
-    alt1 = np.array([theta1_i, theta2_i,    theta3_i   + np.arctan(35/420)])
-    alt2 = np.array([theta1_i, theta2_iii , theta3_ii  + np.arctan(35/420)])
-    alt3 = np.array([theta1_ii, theta2_ii , theta3_iii + np.arctan(35/420)])
-    alt4 = np.array([theta1_ii, theta2_iv , theta3_iv  + np.arctan(35/420)])
+    c2pp = (r2 + r3_o * c3) * np.sqrt(Px**2 + Py**2) + r3_o * s3p * Pz
+    c2pn = (r2 + r3_o * c3) * np.sqrt(Px**2 + Py**2) + r3_o * s3n * Pz
 
+    s2np = (r2 + r3_o*c3) * Pz - r3_o * s3p * np.sqrt(Px**2 + Py**2)
+    s2nn = (r2 + r3_o*c3) * Pz - r3_o * s3n * np.sqrt(Px**2 + Py**2)
 
-    return np.array([alt1,alt2,alt3,alt4])
+    theta21 = np.arctan2(s2np,c2pp) 
+    theta23 = np.arctan2(s2nn,c2pn) 
 
+    # Backward configurations using theta12
+    Px, Py, Pz =pw[0] - np.cos(theta12) * a1, \
+                pw[1] + np.sin(theta12) * a1, \
+                pw[2] - r1
 
+    c3 = (Px**2 + Py**2 + Pz**2 - r2**2 - r3_o**2) / (2 * r2 * r3_o)
 
-def inverseKinematicsTheta456(thetalists, T_SB, S, M):
-    '''
-    Inputs:
-        thetalists: a list of thetas for each joint
-        T_SB: a 4x4 transformation matrix from the base to the end effector
-        S: a 6x6 matrix of the space fixed screw axis
-        M: a 4x4 matrix of robot in its home position
-    Outputs:
-        thetalists: a list of thetas 1, 2, and 3
-    '''
-    theta = [] #initialize theta return list
+    s3p = np.sqrt(1-c3**2)
+    s3n = -s3p
 
-    for i in thetalists: # for each theta in the list
-        # calculate Transformation matrix from 4 to 6 frame
-        T_46 = exp6(-S[:,2], i[2]) @ exp6(-S[:,1], i[1]) @ exp6(-S[:,0], i[0]) @ T_SB @ np.linalg.inv(M)
-        R_46 = T_46[:3,:3] # extract rotation matrix
+    theta33 = np.arctan2(s3p,c3) + np.arctan2(a2,r3)
+    theta34 = np.arctan2(s3n,c3) + np.arctan2(a2,r3)
 
-        # calculating theta 4, 5, and 6
-        theta4_i = np.arctan2( float(R_46[0,1]) , float(R_46[0,2]))-np.pi/2
-        theta5_i = np.arctan2(np.sqrt(float(R_46[0,1])**2 + float(R_46[0,2])),float(R_46[2,1]))-np.pi/2
-        theta6_i = np.arctan2(-float(R_46[2,1]) , float(R_46[2,0]))
+    c2np = -(r2 + r3_o * c3) * np.sqrt(Px**2 + Py**2) + r3_o * s3p * Pz
+    c2nn = -(r2 + r3_o * c3) * np.sqrt(Px**2 + Py**2) + r3_o * s3n * Pz
 
-        # merging input solution with theta 4, 5, and 6
-        thetalist = np.concatenate((i , np.array([theta4_i, theta5_i, theta6_i])))
-        thetalist = np.around(thetalist*180/np.pi,2)
-        theta.append(thetalist)
+    s2pp = (r2 + r3_o*c3) * Pz + r3_o * s3p * np.sqrt(Px**2 + Py**2)
+    s2pn = (r2 + r3_o*c3) * Pz + r3_o * s3n * np.sqrt(Px**2 + Py**2)
 
-    # R_46sp = sprotz(th4) @ sproty(th5) @ sprotz(th6) # testing
+    theta22 = np.arctan2(s2pp,c2np)
+    theta24 = np.arctan2(s2pn,c2nn) 
 
-    return np.array(theta)
+    config = np.array([[theta11, -theta23, theta31],    # forward over elbow
+                    [theta11,-theta21, theta32],        # forward under elbow
+                    [theta12, -theta24, theta33],       # backward under elbow
+                    [theta12, -theta22, theta34]])      # backward over elbow
+
+    thetalist = np.zeros(shape=(4,6))
+    thetalist2 = np.zeros(shape=(4,6))
+    for i, theta in enumerate(config):
+        t1,t2,t3 = theta[0],theta[1],theta[2]
+        R_S3 = rotz(t1) @ roty(t2) @ roty(t3) @ M[:3,:3]
+
+        R_SB = T_SB[:3,:3]
+        R_3B = R_S3.T @ R_SB
+
+        theta61 = np.arctan2(R_3B[2,1],-R_3B[2,0])
+        theta62 = np.arctan2(-R_3B[2,1],R_3B[2,0])
+
+        theta51 = np.arctan2(np.sqrt(1-R_3B[2,2]**2), R_3B[2,2])
+        theta52 = np.arctan2(-np.sqrt(1-R_3B[2,2]**2), R_3B[2,2])
+        
+        theta41 = np.arctan2(R_3B[1,2],R_3B[0,2])
+        theta42 = np.arctan2(-R_3B[1,2],-R_3B[0,2])
+
+        thetalist[i] = np.concatenate((theta,np.array([theta41,theta51,theta61])))
+        thetalist2[i] = np.concatenate((theta,np.array([theta42,theta52,theta62])))
+
+    return thetalist, thetalist2, FKinSpace(M,Slist,thetalist[0])
