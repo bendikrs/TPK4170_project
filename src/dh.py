@@ -3,6 +3,8 @@ from transformations import quaternion_from_matrix
 from tpk4170.models import Axes
 import numpy as np
 
+# This class is borrowd from the course resources
+
 @dataclass
 class DHLink:
     a: float
