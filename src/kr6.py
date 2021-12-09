@@ -16,7 +16,7 @@ PI = np.pi
 class KR6:
     '''Robot class for the  KUKA KR6 R900 sixx (Agilus) robot
     '''
-    def __init__(self, theta = np.array([0,0,0,0,0,0]), thetalist0 = [0,0,0,0,0,0], eomg=0.01, ev=0.01):
+    def __init__(self, theta = np.array([0,0,0,0,0,0]), thetalist0 = [0,0,0,0,0,0], eomg=0.0000001, ev=0.0000001):
         ''' Constructor for the KR6 robot class.
         :param theta: 6-element list of desired joint angles
         :param thetalist0: 6-element list of initial joint angles, used for the numerical IK
@@ -115,18 +115,19 @@ class KR6:
         # Numerical Inverse Kinematics
         self.IK = tools.IKinSpace_our(self._Slist, self._M, self.Tsb_poe, thetalist0, eomg, ev)
         self.Tsb_IK = self.IK[2][-1] # Tsb using the numerical IK
+        self.thetalist_IK = self.IK[0] #Thetalist using numerical IK
 
         # Calculating the Space Jacobian
         self.Js = mr.JacobianSpace(self._Slist, self.theta)
 
         # Analytical Inverse Kinematics
-        self.aIK_thetaLists = tools.inverseKinematicsTheta123(self.Tsb_poe) # IK for the wrist position, this works
-        self.Tsw = tools.makeT_SW(self.Tsb_poe) # Fetching the Tsw matrix
+        # self.aIK_thetaLists = tools.inverseKinematicsTheta123(self.Tsb_poe) # IK for the wrist position, this works
+
 
         # Analytical Inverse Kinematics position and orientation
         # Complete solution for the Inverse Kinematics, This currently does not work for all configurations
-        if theta.all() != np.array([0,0,0,0,0,0]).all():
-            self.aIK_thetaLists_Tsb = tools.inverseKinematicsTheta456(self.aIK_thetaLists, self.Tsb_poe, self._Slist, self._M) 
+        # if theta.all() != np.array([0,0,0,0,0,0]).all():
+        #     self.aIK_thetaLists_Tsb = tools.inverseKinematicsTheta456(self.aIK_thetaLists, self.Tsb_poe, self._Slist, self._M) 
 
 
     def add_FK_to_viewer(self, viewer: Viewer): # Adding the DH frames to the viewer
