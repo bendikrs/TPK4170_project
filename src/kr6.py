@@ -44,13 +44,6 @@ class KR6:
                 [0, 1, 0, -(self.d1+self.a2),                 0, self.a1+self.d2+self.d3],
                 [-1,0, 0,                  0,-(self.a2+self.d1),                       0]
             ]).T
-        
-        # self._Slist2 = np.array([[0,       0,       0,        1,        0, 1],
-        #                          [0,       1,       1,        0,        1, 0],
-        #                          [1,       0,       0,        0,        0, 0],
-        #                          [0,-self.d1,-self.d2,        0,        0, 0],
-        #                          [0,       0,       0, -self.a2,        0, 0],
-        #                          [0, self.a1,       0,        0, -self.d3, 0]])
 
         # Transposing the theta list to a column vector
         self.theta = np.atleast_2d(theta).T
@@ -120,14 +113,6 @@ class KR6:
         # Calculating the Space Jacobian
         self.Js = mr.JacobianSpace(self._Slist, self.theta)
 
-        # Analytical Inverse Kinematics
-        # self.aIK_thetaLists = tools.inverseKinematicsTheta123(self.Tsb_poe) # IK for the wrist position, this works
-
-
-        # Analytical Inverse Kinematics position and orientation
-        # Complete solution for the Inverse Kinematics, This currently does not work for all configurations
-        # if theta.all() != np.array([0,0,0,0,0,0]).all():
-        #     self.aIK_thetaLists_Tsb = tools.inverseKinematicsTheta456(self.aIK_thetaLists, self.Tsb_poe, self._Slist, self._M) 
 
 
     def add_FK_to_viewer(self, viewer: Viewer): # Adding the DH frames to the viewer

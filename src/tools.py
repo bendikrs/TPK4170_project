@@ -123,7 +123,6 @@ def pointFromT(T=np.array) -> np.array:
 
 
 def analyticalInverseKinematics(T_SB):
-
     # Constants (chose to remake both M and Slist to simplify testing)
     r1,r2,r3,r4,a1,a2 = 0.4, 0.455, 0.420, 0.08, 0.025, 0.035
     r3_o = np.sqrt(r3**2 + a2**2) # the distance between joint 3 and the wrist
@@ -139,7 +138,7 @@ def analyticalInverseKinematics(T_SB):
                 [-1,0,0,r1+a2],
                 [0,0,0,1]])
     
-    #Translate -80mm along z-axis of endframe
+    # Translate -80mm along z-axis of endframe
     T_BW = np.array([[1,0,0,0],
                     [0,1,0,0],
                     [0,0,1,-0.08],
@@ -150,7 +149,7 @@ def analyticalInverseKinematics(T_SB):
     theta11 = -np.arctan2(pw[1],pw[0])
     theta12 = -np.arctan2(-pw[1],-pw[0])
 
-    #Forward configurations using theta11
+    # Forward configurations using theta11
     Px, Py, Pz =pw[0] - np.cos(theta11) * a1, \
                 pw[1] + np.sin(theta11) * a1, \
                 pw[2] - r1
@@ -172,7 +171,7 @@ def analyticalInverseKinematics(T_SB):
     theta21 = np.arctan2(s2np,c2pp) 
     theta23 = np.arctan2(s2nn,c2pn) 
 
-    #Backward configurations using theta12
+    # Backward configurations using theta12
     Px, Py, Pz =pw[0] - np.cos(theta12) * a1, \
                 pw[1] + np.sin(theta12) * a1, \
                 pw[2] - r1
@@ -194,16 +193,10 @@ def analyticalInverseKinematics(T_SB):
     theta22 = np.arctan2(s2pp,c2np)
     theta24 = np.arctan2(s2pn,c2nn) 
 
-    config = np.array([[theta11, -theta23, theta31], # forward over elbow
-                    [theta11,-theta21, theta32], # forward under elbow
-                    [theta12, -theta24, theta33], # backward under elbow
-                    [theta12, -theta22, theta34]]) # backward over elbow
-
-    # for i in config:
-    #     #printing if the first 3 angles create a correct wrist position
-    #     test = np.array([i[0],i[1],i[2],0,0,0])
-    #     print(test*180/np.pi)
-    #     print(np.allclose(pointFromT(T_SW), pointFromT(np.dot(FKinSpace(M,Slist,test), T_BW))))
+    config = np.array([[theta11, -theta23, theta31],    # forward over elbow
+                    [theta11,-theta21, theta32],        # forward under elbow
+                    [theta12, -theta24, theta33],       # backward under elbow
+                    [theta12, -theta22, theta34]])      # backward over elbow
 
     thetalist = np.zeros(shape=(4,6))
     thetalist2 = np.zeros(shape=(4,6))
